@@ -33,6 +33,8 @@ if (navigator.geolocation)
         .bindPopup('A pretty CSS popup.<br> Easily customizable.')
         .openPopup();
 
+        map.on()
+
     }, function(){
         alert('Could not get your position')
     })
