@@ -16,57 +16,66 @@ const inputElevation = document.querySelector('.form__input--elevation');
 let map, mapEvent 
 
 class App {
-    constructor () {}
+    #map;
+    #mapEvent;
+
+    constructor () {
+        this._getPosition();
+        form.addEventListener('submit', this._newWorkout.bind(this));
+        inputType.addEventListener('change',this._toggleElevationField);
+    }
 
 
-    _getPosition () {}
+    _getPosition () {
+       if (navigator.geolocation)
+        navigator.geolocation.getCurrentPosition(this._loadMap.bind(this), function (){
+            alert('Could not get you position')
+        });
+    }
 
 
-    _loadMap () {}
-
-    _toggleElevationField () {}
-
-    _newWorkout () {}
-}
-
-
-if (navigator.geolocation)
-    navigator.geolocation.getCurrentPosition(function(position){
-        const { latitude } = position.coords;
-        const { longitude } = position.coords;
-        console.log(`https://www.google.com/maps/@${latitude},${longitude}`);
-
-        const coords = [latitude, longitude]
-
-        map = L.map('map').setView(coords, 13); //the second parameter 13 is for the zoom of the map, can be changed depeding on the zoom increase wanted
-
-        L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        }).addTo(map);
-
+    _loadMap (position) {
         
-        // function to track on click location over the map // handling clicks on map
-        map.on('click', function (mapE){
-            mapEvent = mapE;
+            const { latitude } = position.coords;
+            const { longitude } = position.coords;
+            console.log(`https://www.google.com/maps/@${latitude},${longitude}`);
+    
+            const coords = [latitude, longitude]
+    
+            this.#map = L.map('map').setView(coords, 13); //the second parameter 13 is for the zoom of the map, can be changed depeding on the zoom increase wanted
+    
+            L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(this.#map);
+    
+            
+            // function to track on click location over the map // handling clicks on map
+            this.#map.on('click', this._showForm.bind(this));
+                
+    }
+
+    _showForm (mapE) {
+        this.#mapEvent = mapE;
             form.classList.remove('hidden');
             inputDistance.focus();
-            
-        })
+                
+    }
 
-    }, function(){
-        alert('Could not get your position')
-    })
+    _toggleElevationField () {
+        inputElevation.closest('.form__row').classList.toggle('form__row--hidden'); //both use the same toggle, so if one is used the other is hidden 
+            inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
+    }
 
-    form.addEventListener('submit', function(e){
+    _newWorkout (e) {
         e.preventDefault();
-
+    
         //Clear input fields 
         inputDistance.value = inputDuration.value = inputCadence.value = inputElevation.value = '';
         //Display marker
-        console.log(mapEvent);
-            const {lat, lng} = mapEvent.latlng;
+        
+            const {lat, lng} = this.#mapEvent.latlng;
 
-            L.marker([lat, lng]).addTo(map).bindPopup(L.popup({
+            L.marker([lat, lng]).addTo(this.#map).bindPopup(L.popup({
                 maxWidth: 250, 
                 minWidth: 100,
                 autoClose: false,
@@ -75,12 +84,9 @@ if (navigator.geolocation)
             }))
             .setPopupContent('Workout')
             .openPopup();
+    }
+}
+
+const app = new App ();
 
 
-
-    });
-
-inputType.addEventListener('change', function(){
-    inputElevation.closest('.form__row').classList.toggle('form__row--hidden'); //both use the same toggle, so if one is used the other is hidden 
-    inputCadence.closest('.form__row').classList.toggle('form__row--hidden');
-})
