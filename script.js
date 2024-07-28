@@ -12,6 +12,7 @@
 class Workout {
     date = new Date();
     id = (Date.now () + '').slice(-10); 
+    clicks = 0;
 
 
     constructor(coords, distance, duration){
@@ -25,6 +26,9 @@ class Workout {
         const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
         this.description = `${this.type[0].toUpperCase()}${this.type.slice(1)} on ${months[this.date.getMonth()]} ${this.date.getDate()}`;
+    }
+    clicks (){
+        this.clicks++
     }
 }
 
@@ -79,6 +83,7 @@ const inputElevation = document.querySelector('.form__input--elevation');
 
 class App {
     #map;
+    #mapZoomLevel = 13;
     #mapEvent;
     #workouts = [];
 
@@ -86,6 +91,7 @@ class App {
         this._getPosition();
         form.addEventListener('submit', this._newWorkout.bind(this));
         inputType.addEventListener('change',this._toggleElevationField);
+        containerWorkouts.addEventListener('click', this._moveToPopup.bind(this));
     }
 
 
@@ -105,7 +111,7 @@ class App {
     
             const coords = [latitude, longitude]
     
-            this.#map = L.map('map').setView(coords, 13); //the second parameter 13 is for the zoom of the map, can be changed depeding on the zoom increase wanted
+            this.#map = L.map('map').setView(coords, this.#mapZoomLevel); //the second parameter 13 is for the zoom of the map, can be changed depeding on the zoom increase wanted
     
             L.tileLayer('https://tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -257,6 +263,24 @@ class App {
           </div>
         </li>`
         form.insertAdjacentHTML('afterend', html);
+    }
+
+    _moveToPopup(e){
+        const workoutEL = e.target.closest('.workout')
+        
+        if(!workoutEL) return;
+
+        const workout =this.#workouts.find(work => work.id === workoutEL.dataset.id);
+
+        this.#map.setView(workout.coords, this.#mapZoomLevel, {
+            animate: true, 
+            pan:{
+                duration:1
+            },
+        });
+
+    workout.clicks();
+
     }
 }
 
